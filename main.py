@@ -30,7 +30,7 @@ conn = sqlite3.connect(get_config('db', 'path'))
 cur = conn.cursor()
 
 g_source_img = './source_img/angelababy.jpg'
-g_result_min_value = 60
+g_result_min_value = 30
 g_img_list = []
 g_ai_resultlist = []
 g_ai_qps_errorlist = []
@@ -60,7 +60,7 @@ def get_token():
 
 def load_img():
     try:
-        rows = cur.execute("select * from face_youma")
+        rows = cur.execute("select * from face_youma limit 1000")
         for row in rows:
             g_img_list.append({'imgurl': row[0], 'username': row[1], 'videourl': row[2], 'buf': row[3]})
     except Exception as ex:
@@ -101,7 +101,7 @@ def chk_photo(info):
                 g_ai_qps_errorlist.append(info)
                 warnings.warn(msg)
             else:
-                info['buf'] = '' # 清空buf，比较一会打印的时候json太长
+                info['buf'] = ''  # 清空buf，比较一会打印的时候json太长
                 g_ai_errorlist.append(info)
                 warnings.warn('当前username：' + info['username'] + ' imgurl：' + info['imgurl'] + ' ' + msg)
             return -1
@@ -144,6 +144,7 @@ def start_work():
     print('---------------------------')
     if len(g_ai_errorlist) > 0:
         print('处理异常的结果集合,总共：' + str(len(g_ai_errorlist)) + "," + json.dumps(g_ai_errorlist))
+        save_error_log()
     print('---------------------------')
 
 
@@ -151,6 +152,13 @@ def save_log():
     username = g_source_img.split('/')[-1].split('.')[0]
     filename = username + '_' + time.strftime('%Y%m%d%H%M%S', time.localtime(time.time()))
     logstr = json.dumps(g_ai_resultlist, ensure_ascii=False)
+    with open('./log/' + filename + '.log', 'w', encoding='utf-8') as f:
+        f.write(logstr)
+
+
+def save_error_log():
+    filename = 'error_' + time.strftime('%Y%m%d%H%M%S', time.localtime(time.time()))
+    logstr = json.dumps(g_ai_errorlist, ensure_ascii=False)
     with open('./log/' + filename + '.log', 'w', encoding='utf-8') as f:
         f.write(logstr)
 
