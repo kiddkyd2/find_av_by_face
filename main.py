@@ -7,6 +7,7 @@ import sys
 import threading
 import time
 import warnings
+from concurrent.futures import ThreadPoolExecutor, wait
 from datetime import datetime
 from operator import itemgetter
 from urllib import request
@@ -28,13 +29,15 @@ client_secret = get_config('baidu', 'client_secret')
 r = redis.Redis(host='localhost', port=6379, db=0)
 conn = sqlite3.connect(get_config('db', 'path'))
 cur = conn.cursor()
+executor = ThreadPoolExecutor(max_workers=10)
 
-g_source_img = './source_img/angelababy.jpg'
-g_result_min_value = 30
+g_source_img = './source_img/古力娜扎.jpg'
+g_result_min_value = 50
 g_img_list = []
 g_ai_resultlist = []
 g_ai_qps_errorlist = []
 g_ai_errorlist = []
+g_threadlist = []
 
 
 def get_token():
@@ -60,7 +63,7 @@ def get_token():
 
 def load_img():
     try:
-        rows = cur.execute("select * from face_youma limit 1000")
+        rows = cur.execute("select * from face_youma")
         for row in rows:
             g_img_list.append({'imgurl': row[0], 'username': row[1], 'videourl': row[2], 'buf': row[3]})
     except Exception as ex:
@@ -101,8 +104,7 @@ def chk_photo(info):
                 g_ai_qps_errorlist.append(info)
                 warnings.warn(msg)
             else:
-                info['buf'] = ''  # 清空buf，比较一会打印的时候json太长
-                g_ai_errorlist.append(info)
+                g_ai_errorlist.append((info['username'], info['imgurl'], msg))
                 warnings.warn('当前username：' + info['username'] + ' imgurl：' + info['imgurl'] + ' ' + msg)
             return -1
 
@@ -118,7 +120,8 @@ def start_work():
     print('开始处理数据，总共：' + str(len(g_img_list)) + '条')
     for i, info in enumerate(g_img_list):
         print('当前：' + str(i + 1))
-        threading.Thread(target=chk_photo_for, args=(info,)).start()
+        g_threadlist.append(executor.submit(chk_photo_for, info))
+        # threading.Thread(target=chk_photo_for, args=(info,)).start()
         time.sleep(.6)
 
     try:
@@ -126,8 +129,9 @@ def start_work():
             print('---------------------------')
             print('开始处理QPS超上限的数据,总共：' + str(len(g_ai_qps_errorlist)) + '条')
             for i, info in enumerate(g_ai_qps_errorlist):
-                print('当前：' + str(i))
-                threading.Thread(target=chk_photo_for, args=(info,)).start()
+                print('当前：' + str(i + 1))
+                g_threadlist.append(executor.submit(chk_photo_for, info))
+                # threading.Thread(target=chk_photo_for, args=(info,)).start()
                 time.sleep(.6)
 
         g_ai_resultlist.sort(key=itemgetter(2), reverse=True)
@@ -139,11 +143,14 @@ def start_work():
     finally:
         save_log()
 
+    print('---------最终结果-------------')
+    print(wait(g_threadlist, return_when='ALL_COMPLETE', timeout=60))
+    executor.shutdown()
     print(g_ai_resultlist)
     print("耗时：{0}秒".format(time.clock()))
     print('---------------------------')
     if len(g_ai_errorlist) > 0:
-        print('处理异常的结果集合,总共：' + str(len(g_ai_errorlist)) + "," + json.dumps(g_ai_errorlist))
+        print('处理异常的结果集合,总共：' + str(len(g_ai_errorlist)) + "," + json.dumps(g_ai_errorlist, ensure_ascii=False))
         save_error_log()
     print('---------------------------')
 
