@@ -111,3 +111,4 @@ dmypy.json
 .idea/
 config.conf
 db/
+my_dlib/model/
