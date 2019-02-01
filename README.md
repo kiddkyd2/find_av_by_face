@@ -21,7 +21,7 @@ face = FaceDlib()
 
 ## 数据库
 目前爬取了1万张av女优头像图片  
-https://pan.baidu.com/s/11xLcvmSjYIG3cyR7voux_w  
+[点击下载数据库](https://pan.baidu.com/s/11xLcvmSjYIG3cyR7voux_w)  
 为了保护某网站健康稳定发展，字段里屏蔽了爬取的网站域名
 
 
@@ -32,7 +32,7 @@ pip install cmake
 ```
 再安装dlib  
 
-1. 访问dlib官网http://dlib.net/，点击左下角的download，下载源码到本地  
+1. 访问[dlib官网](http://dlib.net/)，点击左下角的download，下载源码到本地  
 2. 解压到本地，发现里面有个setup.py  
 3. 在当前文件路径打开命令行，执行`python setup.py install`
 
