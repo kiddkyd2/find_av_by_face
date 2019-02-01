@@ -30,7 +30,7 @@ class FaceDlib(IFace):
         self.face_rec_model = dlib.face_recognition_model_v1(self.face_rec_model_path)
 
         self.executor = ThreadPoolExecutor(max_workers=8)
-        self.result_min_value = 0.4  # 至少要少于0.6才是相似
+        self.result_min_value = 0.5  # 至少要少于0.6才是相似
 
     def init(self, source_img_info, target_img_list, result_list):
         os.makedirs(os.path.join(self.current_path, 'my_dlib/cache_data/'), exist_ok=True)
@@ -46,15 +46,10 @@ class FaceDlib(IFace):
         return self
 
     def working(self):
-        # pass
-        print('开始处理数据，总共：' + str(len(self.target_img_list)) + '条')
-        for i, target_info in enumerate(self.target_img_list):
-            self.thread_list.append(self.executor.submit(self.__chk_photo_for, target_info))
-
         try:
-            for i, future in enumerate(as_completed(self.thread_list)):
-                print('完成：' + str(i + 1))
-            # wait(self.thread_list, return_when='ALL_COMPLETED')
+            print('开始处理数据，总共：' + str(len(self.target_img_list)) + '条')
+            self.__start_thread(self.target_img_list)
+            self.__show_thread_log()
 
             if len(self.result_list) > 0:
                 self.result_list.sort(key=itemgetter(2))
@@ -72,6 +67,19 @@ class FaceDlib(IFace):
         result = self.__compare_data(self.source_img_data, self.__get_tezheng(target_info))
         if result < self.result_min_value:
             self.result_list.append((target_info['imgurl'], target_info['username'], result))
+
+        # 开始构建线程进行工作
+
+    def __start_thread(self, work_list):
+        self.thread_list.clear()
+        for img_info in work_list:
+            self.thread_list.append(self.executor.submit(self.__chk_photo_for, img_info))
+
+        # 显示线程日志
+
+    def __show_thread_log(self):
+        for i, future in enumerate(as_completed(self.thread_list)):
+            print('完成：' + str(i + 1))
 
     def __get_tezheng(self, img_info):
 
