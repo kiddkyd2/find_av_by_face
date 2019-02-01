@@ -25,7 +25,7 @@ def base64photo(img_path):
 conn = sqlite3.connect(get_config('db', 'path'))
 cur = conn.cursor()
 
-g_source_img = './source_img/angelababy.jpg'
+g_source_img = './source_img/迪丽热巴.jpg'
 g_source_img_info = {}
 g_img_list = []
 g_result_list = []
@@ -35,11 +35,12 @@ def init():
     global g_source_img_info
     g_source_img_info = {'imgurl': g_source_img, 'username': g_source_img.split('/')[-1].split('.')[0],
                          'videourl': '', 'buf': base64photo(g_source_img)}
+    os.makedirs(os.path.join(os.getcwd(), 'log/'), exist_ok=True)
 
 
 def load_img():
     try:
-        rows = cur.execute("select * from face_youma limit 2")
+        rows = cur.execute("select * from face_youma")
         for row in rows:
             g_img_list.append({'imgurl': row[0], 'username': row[1], 'videourl': row[2], 'buf': row[3]})
     except Exception as ex:
@@ -57,10 +58,10 @@ def start_work():
     global g_result_list
     time.clock()
 
-    # face = FaceBaiDu(g_source_img_info, g_img_list, g_result_list)
-    face = FaceDlib(g_source_img_info, g_img_list, g_result_list)
+    # face = FaceBaiDu()
+    face = FaceDlib()
 
-    face.working()
+    face.init(g_source_img_info, g_img_list, g_result_list).working()
 
     print("耗时：{0}秒".format(time.clock()))
     print('---------最终结果-------------')

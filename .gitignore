@@ -112,3 +112,4 @@ dmypy.json
 config.conf
 db/
 my_dlib/model/
+cache_data/
