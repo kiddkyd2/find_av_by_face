@@ -48,14 +48,14 @@ class FaceBaiDu(IFace):
             if len(self.result_list) > 0:
                 self.result_list.sort(key=itemgetter(2), reverse=True)
 
-            print('---------线程结束-----------')
+            print('---------任务完成-----------')
 
         except Exception as ex:
             info = sys.exc_info()
             msg = '{}:{}'.format(info[0], info[1])
             warnings.warn(msg)
         finally:
-            self.executor.shutdown()
+            self.executor.shutdown(False)
             self.save_log(self.source_img_info['imgurl'].split('/')[-1].split('.')[0], self.result_list)
             self.save_error_log(self.error_list)
 
@@ -67,7 +67,8 @@ class FaceBaiDu(IFace):
             time.sleep(.6)  # 控制接口请求频率
 
         wait(self.thread_list, 30)  # 等待所有线程完成工作，30秒后继续执行代码
-        self.executor.shutdown()
+        self.executor.shutdown(False)
+        print('---------线程结束-----------')
 
     def __chk_photo_for(self, i, info):
         result = self.__compare_data(info)
@@ -86,7 +87,7 @@ class FaceBaiDu(IFace):
         request_url = request_url + "?access_token=" + self.__get_token()
         req = request.Request(url=request_url, data=params.encode(encoding='UTF8'))
         req.add_header('Content-Type', 'application/json')
-        resp = urlopen(req)
+        resp = urlopen(req, timeout=10)
         content = resp.read().decode("utf-8")
         if content:
             result = json.loads(content)

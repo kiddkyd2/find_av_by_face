@@ -53,13 +53,13 @@ class FaceDlib(IFace):
 
             if len(self.result_list) > 0:
                 self.result_list.sort(key=itemgetter(2))
-            print('---------线程结束------------')
+            print('---------任务结束------------')
         except Exception as ex:
             info = sys.exc_info()
             msg = '{}:{}'.format(info[0], info[1])
             warnings.warn(msg)
         finally:
-            self.executor.shutdown()
+            self.executor.shutdown(False)
             self.save_log(self.source_img_info['imgurl'].split('/')[-1].split('.')[0], self.result_list)
             self.save_error_log(self.error_list)
 
@@ -68,18 +68,17 @@ class FaceDlib(IFace):
         if result < self.result_min_value:
             self.result_list.append((target_info['imgurl'], target_info['username'], result))
 
-        # 开始构建线程进行工作
-
+    # 开始构建线程进行工作
     def __start_thread(self, work_list):
         self.thread_list.clear()
         for img_info in work_list:
             self.thread_list.append(self.executor.submit(self.__chk_photo_for, img_info))
 
-        # 显示线程日志
-
+    # 显示线程日志
     def __show_thread_log(self):
         for i, future in enumerate(as_completed(self.thread_list)):
             print('完成：' + str(i + 1))
+        print('---------线程结束------------')
 
     def __get_tezheng(self, img_info):
 
