@@ -25,7 +25,7 @@ def base64photo(img_path):
 conn = sqlite3.connect(get_config('db', 'path'))
 cur = conn.cursor()
 
-g_source_img = './source_img/迪丽热巴.jpg'
+g_source_img = './source_img/杨幂.jpg'
 g_source_img_info = {}
 g_img_list = []
 g_result_list = []
@@ -58,8 +58,8 @@ def start_work():
     global g_result_list
     time.clock()
 
-    # face = FaceBaiDu()
-    face = FaceDlib()
+    face = FaceBaiDu()
+    # face = FaceDlib()
 
     face.init(g_source_img_info, g_img_list, g_result_list).working()
 

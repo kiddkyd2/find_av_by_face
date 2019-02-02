@@ -1,4 +1,5 @@
 import configparser
+import copy
 import json
 import os
 import sys
@@ -36,14 +37,13 @@ class FaceBaiDu(IFace):
         try:
             print('开始处理数据，总共：' + str(len(self.target_img_list)) + '条')
             self.__start_thread(self.target_img_list)
-            self.__show_thread_log()
 
-            if len(self.ai_qps_error_list) > 0:
+            while len(self.ai_qps_error_list) > 0:
                 print('---------------------------')
                 print('开始处理QPS超上限的数据,总共：' + str(len(self.ai_qps_error_list)) + '条')
-
-                self.__start_thread(self.ai_qps_error_list)
-                self.__show_thread_log()
+                self.target_img_list = copy.deepcopy(self.ai_qps_error_list)  # 深度复制
+                self.ai_qps_error_list.clear()
+                self.__start_thread(self.target_img_list)
 
             if len(self.result_list) > 0:
                 self.result_list.sort(key=itemgetter(2), reverse=True)
@@ -56,25 +56,24 @@ class FaceBaiDu(IFace):
             warnings.warn(msg)
         finally:
             self.executor.shutdown()
-            self.__save_log()
-            self.__save_error_log()
+            self.save_log(self.source_img_info['imgurl'].split('/')[-1].split('.')[0], self.result_list)
+            self.save_error_log(self.error_list)
 
     # 开始构建线程进行工作
     def __start_thread(self, work_list):
         self.thread_list.clear()
-        for img_info in work_list:
-            self.thread_list.append(self.executor.submit(self.__chk_photo_for, img_info))
+        for i, img_info in enumerate(work_list):
+            self.thread_list.append(self.executor.submit(self.__chk_photo_for, i, img_info))
+            time.sleep(.6)  # 控制接口请求频率
 
-    # 显示线程日志
-    def __show_thread_log(self):
-        for i, future in enumerate(as_completed(self.thread_list)):
-            print('完成：' + str(i + 1))
+        wait(self.thread_list, 30)  # 等待所有线程完成工作，30秒后继续执行代码
+        self.executor.shutdown()
 
-    def __chk_photo_for(self, info):
+    def __chk_photo_for(self, i, info):
         result = self.__compare_data(info)
+        print('完成：' + str(i + 1))
         if result > self.result_min_value:
             self.result_list.append((info['imgurl'], info['username'], result))
-        time.sleep(.6)  # 控制接口请求频率
 
     def __compare_data(self, img_info):
         request_url = "https://aip.baidubce.com/rest/2.0/face/v3/match"
@@ -102,23 +101,6 @@ class FaceBaiDu(IFace):
                     self.error_list.append((img_info['username'], img_info['imgurl'], msg))
                     warnings.warn('当前username：' + img_info['username'] + ' imgurl：' + img_info['imgurl'] + ' ' + msg)
                 return -1
-
-    def __save_log(self):
-        username = self.source_img_info['imgurl'].split('/')[-1].split('.')[0]
-        filename = username + '_' + time.strftime('%Y%m%d%H%M%S', time.localtime(time.time()))
-        logstr = json.dumps(self.result_list, ensure_ascii=False)
-        with open('./log/' + filename + '.log', 'w', encoding='utf-8') as f:
-            f.write(logstr)
-
-    def __save_error_log(self):
-        if len(self.error_list) > 0:
-            print('处理异常的结果集合,总共：' + str(len(self.error_list)) + "," + json.dumps(self.error_list,
-                                                                                 ensure_ascii=False))
-            filename = 'error_' + time.strftime('%Y%m%d%H%M%S', time.localtime(time.time()))
-            logstr = json.dumps(self.error_list, ensure_ascii=False)
-            with open('./log/' + filename + '.log', 'w', encoding='utf-8') as f:
-                f.write(logstr)
-            print('---------------------------')
 
     def __get_config(self, section, key):
         config = configparser.ConfigParser()

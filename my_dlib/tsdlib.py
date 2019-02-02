@@ -60,8 +60,8 @@ class FaceDlib(IFace):
             warnings.warn(msg)
         finally:
             self.executor.shutdown()
-            self.__save_log()
-            self.__save_error_log()
+            self.save_log(self.source_img_info['imgurl'].split('/')[-1].split('.')[0], self.result_list)
+            self.save_error_log(self.error_list)
 
     def __chk_photo_for(self, target_info):
         result = self.__compare_data(self.source_img_data, self.__get_tezheng(target_info))
@@ -118,20 +118,3 @@ class FaceDlib(IFace):
             diff += (data1[i] - data2[i]) ** 2
         diff = np.sqrt(diff)
         return diff
-
-    def __save_log(self):
-        username = self.source_img_info['imgurl'].split('/')[-1].split('.')[0]
-        filename = username + '_' + time.strftime('%Y%m%d%H%M%S', time.localtime(time.time()))
-        logstr = json.dumps(self.result_list, ensure_ascii=False)
-        with open('./log/' + filename + '.log', 'w', encoding='utf-8') as f:
-            f.write(logstr)
-
-    def __save_error_log(self):
-        if len(self.error_list) > 0:
-            print('处理异常的结果集合,总共：' + str(len(self.error_list)) + "," + json.dumps(self.error_list,
-                                                                                 ensure_ascii=False))
-            filename = 'error_' + time.strftime('%Y%m%d%H%M%S', time.localtime(time.time()))
-            logstr = json.dumps(self.error_list, ensure_ascii=False)
-            with open('./log/' + filename + '.log', 'w', encoding='utf-8') as f:
-                f.write(logstr)
-            print('---------------------------')
