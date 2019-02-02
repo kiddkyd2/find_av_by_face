@@ -7,6 +7,14 @@
 
 ## 百度AI接口
 先去申请一个[百度AI平台](http://ai.baidu.com/)的账号，创建一个应用，使用人脸对比接口。这样就可以获得一对密钥，输入到项目的config.conf文件中。这个文件可能没有提交上git，大家自行创建。
+```
+[baidu]
+client_id = UGBkTfzWFLGLeR大概是这样
+client_secret = ZMQTUQCgiF大概是这样
+
+[db]
+path = 大概是这样/db/mydb.sqlite3
+```
 人脸识别率高，但是由于用的是免费接口，并发控制最大是2，一万张图片大概需要1小时  
 ```
 face = FaceBaiDu()
