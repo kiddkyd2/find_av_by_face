@@ -7,6 +7,7 @@ import time
 
 from my_baidu.tsbaidu import FaceBaiDu
 from my_dlib.tsdlib import FaceDlib
+from my_facepp.tsfacepp import FaceFacepp
 
 
 def get_config(section, key):
@@ -25,7 +26,7 @@ def base64photo(img_path):
 conn = sqlite3.connect(get_config('db', 'path'))
 cur = conn.cursor()
 
-g_source_img = './source_img/杨幂.jpg'
+g_source_img = './source_img/古力娜扎.jpg'
 g_source_img_info = {}
 g_img_list = []
 g_result_list = []
@@ -40,7 +41,7 @@ def init():
 
 def load_img():
     try:
-        rows = cur.execute("select * from face_youma")
+        rows = cur.execute("select * from face_youma limit 1000")
         for row in rows:
             g_img_list.append({'imgurl': row[0], 'username': row[1], 'videourl': row[2], 'buf': row[3]})
     except Exception as ex:
@@ -58,8 +59,9 @@ def start_work():
     global g_result_list
     time.clock()
 
-    face = FaceBaiDu()
+    # face = FaceBaiDu()
     # face = FaceDlib()
+    face = FaceFacepp()
 
     face.init(g_source_img_info, g_img_list, g_result_list).working()
 
