@@ -60,7 +60,7 @@ class FaceDlib(IFace):
             warnings.warn(msg)
         finally:
             self.executor.shutdown(False)
-            self.save_log(self.source_img_info['imgurl'].split('/')[-1].split('.')[0], self.result_list)
+            self.save_log(self.source_img_info['imgurl'].split('/')[-1].split('.')[0], self.result_list, "dlib")
             self.save_error_log(self.error_list)
 
     def __chk_photo_for(self, target_info):

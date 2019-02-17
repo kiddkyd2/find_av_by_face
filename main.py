@@ -26,7 +26,7 @@ def base64photo(img_path):
 conn = sqlite3.connect(get_config('db', 'path'))
 cur = conn.cursor()
 
-g_source_img = './source_img/古力娜扎.jpg'
+g_source_img = './source_img/杨幂.jpg'
 g_source_img_info = {}
 g_img_list = []
 g_result_list = []
@@ -41,7 +41,7 @@ def init():
 
 def load_img():
     try:
-        rows = cur.execute("select * from face_youma limit 1000")
+        rows = cur.execute("select * from face_youma limit 10")
         for row in rows:
             g_img_list.append({'imgurl': row[0], 'username': row[1], 'videourl': row[2], 'buf': row[3]})
     except Exception as ex:

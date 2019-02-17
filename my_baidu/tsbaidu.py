@@ -56,7 +56,7 @@ class FaceBaiDu(IFace):
             warnings.warn(msg)
         finally:
             self.executor.shutdown(False)
-            self.save_log(self.source_img_info['imgurl'].split('/')[-1].split('.')[0], self.result_list)
+            self.save_log(self.source_img_info['imgurl'].split('/')[-1].split('.')[0], self.result_list, "baidu")
             self.save_error_log(self.error_list)
 
     # 开始构建线程进行工作

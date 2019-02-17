@@ -15,9 +15,11 @@ class IFace(metaclass=abc.ABCMeta):
     def working(self):
         pass
 
-    def save_log(self, username, data_list):
+    def save_log(self, username, data_list, api_name=None):
         if len(data_list) > 0:
-            filename = username + '_' + time.strftime('%Y%m%d%H%M%S', time.localtime(time.time()))
+            filename = username + '_' + \
+                       (api_name + "_" if api_name is not None else "") + \
+                       time.strftime('%Y%m%d%H%M%S', time.localtime(time.time()))
             logstr = json.dumps(data_list, ensure_ascii=False)
             with open('./log/' + filename + '.log', 'w', encoding='utf-8') as f:
                 f.write(logstr)
